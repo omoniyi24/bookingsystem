@@ -26,8 +26,8 @@ public abstract class UserService {
         return userRepository.save(user);
     }
 
-    public void login(UserDTO user){
-
+    public User login(UserDTO user){
+        return new User();
     }
 
     public void updateProfile(UserDTO user){

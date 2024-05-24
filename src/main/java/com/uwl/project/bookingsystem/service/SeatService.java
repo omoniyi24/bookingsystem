@@ -1,21 +1,36 @@
 package com.uwl.project.bookingsystem.service;
 
+import com.uwl.project.bookingsystem.dto.UserDTO;
 import com.uwl.project.bookingsystem.model.Seat;
+import com.uwl.project.bookingsystem.repository.SeatRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SeatService {
 
-    public Seat checkSeatAvailability(Seat seat){
-        return new Seat();
+    @Autowired
+    private SeatRepository seatRepository;
+
+    public Boolean checkSeatAvailability(Long id, UserDTO userDTO){
+        return Boolean.TRUE;
     }
 
-    public Seat reserveSeat(Seat seat){
-        return new Seat();
+    public Boolean reserveSeat(Long id, UserDTO userDTO){
+        return Boolean.TRUE;
     }
 
-    public Seat releaseSeat(Seat seat){
-        return new Seat();
+    public Boolean releaseSeat(Long id, UserDTO userDTO){
+        return Boolean.TRUE;
+    }
+    public List<Seat> getAllSeat(UserDTO userDTO){
+        return seatRepository.findAll();
+    }
+    public Optional<Seat> getAllSeatById(Long seatId, UserDTO userDTO){
+        return seatRepository.findById(seatId);
     }
 }
 
