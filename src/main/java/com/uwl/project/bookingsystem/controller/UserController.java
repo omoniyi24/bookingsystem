@@ -20,15 +20,20 @@ import jakarta.validation.Valid;
 
 
 @RestController
-@RequestMapping("/airline")
+@RequestMapping("/airline/user")
 public class UserController {
 
     @Autowired
     private RegisteredUserService registeredUserService;
 
-    @PostMapping("/user")
+    @PostMapping("/register")
     public ResponseEntity<User> registerUser(@Valid @RequestBody UserDTO userDTO) {
         User register = registeredUserService.register(userDTO, Role.PASSENGER);
+        return new ResponseEntity<>(register, HttpStatus.OK);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<User> login(@Valid @RequestBody UserDTO userDTO) {
+        User register = registeredUserService.login(userDTO);
         return new ResponseEntity<>(register, HttpStatus.OK);
     }
 }
