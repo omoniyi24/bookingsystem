@@ -1,77 +1,74 @@
 package com.uwl.project.bookingsystem.helper;
 
-public class SeatAllocator {
-    private final boolean[][] seats; // True if seat is occupied, false if available
-    private final int rows;
-    private final int cols;
+import java.util.*;
 
-    // Constructor to initialize the seating chart
-    public SeatAllocator(int rows, int cols) {
-        this.rows = rows;
-        this.cols = cols;
-        this.seats = new boolean[rows][cols];
+public class SeatAllocator {
+    private static final int ROWS = 30; // Assuming 30 rows for simplicity
+    private static final int SEATS_PER_ROW = 6;
+    private final Set<String> reservedSeats;
+    private static final char[] SEAT_LABELS = {'A', 'B', 'C', 'D', 'E', 'F'};
+
+    public SeatAllocator(Set<String> reservedSeats) {
+        this.reservedSeats = reservedSeats;
     }
 
-    // Method to allocate seats
-    public boolean allocateSeats(int numSeats, boolean acceptFireExitResponsibility, int aircraftType) {
-        int[] fireExitRows = getFireExitRows(aircraftType);
+    public boolean bookSeats(int numSeats, boolean acceptFireExitResponsibility, int aircraftType) {
+        if (numSeats < 1 || numSeats > 6) {
+            throw new IllegalArgumentException("Number of seats to book must be between 1 and 6.");
+        }
 
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col <= cols - numSeats; col++) {
-                if (canAllocate(row, col, numSeats, fireExitRows, acceptFireExitResponsibility)) {
-                    markSeatsAsOccupied(row, col, numSeats);
-                    return true; // Return true if seats have been successfully allocated
+        for (int row = 1; row <= ROWS; row++) {
+            for (int startSeat = 0; startSeat <= SEATS_PER_ROW - numSeats; startSeat++) {
+                List<String> seatsToBook = new ArrayList<>();
+                boolean validBooking = true;
+
+                for (int offset = 0; offset < numSeats; offset++) {
+                    String seat = row + "" + SEAT_LABELS[startSeat + offset];
+                    if (reservedSeats.contains(seat) || (isFireExitSeat(row, SEAT_LABELS[startSeat + offset], aircraftType) && !acceptFireExitResponsibility)) {
+                        validBooking = false;
+                        break;
+                    }
+                    seatsToBook.add(seat);
+                }
+
+                if (validBooking && !createsSingleScatteredSeats(seatsToBook, row)) {
+                    reservedSeats.addAll(seatsToBook);
+                    return true;
                 }
             }
         }
-        return false; // Return false if no suitable seats were found
+
+        return false; // No suitable seats found
     }
 
-    // Check if seats can be allocated without causing isolation
-    private boolean canAllocate(int row, int col, int numSeats, int[] fireExitRows, boolean acceptFireExitResponsibility) {
-        // Check for proximity to fire exit rows
-        if (contains(fireExitRows, row) && !acceptFireExitResponsibility) {
-            return false;
-        }
-
-        // Check if adjacent seats would be isolated
-        if ((col > 0 && seats[row][col - 1] == false) || (col + numSeats < cols && seats[row][col + numSeats] == false)) {
-            return false;
-        }
-
-        // Check if the block of seats is available
-        for (int i = 0; i < numSeats; i++) {
-            if (seats[row][col + i]) { // If any seat in the range is occupied
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // Mark seats as occupied
-    public void markSeatsAsOccupied(int row, int col, int numSeats) {
-        for (int i = 0; i < numSeats; i++) {
-            seats[row][col + i] = true;
-        }
-    }
-
-    // Utility method to determine if a row is a fire exit row
-    private boolean contains(int[] array, int value) {
-        for (int i : array) {
-            if (i == value) {
-                return true;
-            }
+    private boolean isFireExitSeat(int row, char seatLabel, int aircraftType) {
+        if (aircraftType == 1 && row == 10) {
+            return seatLabel == 'A' || seatLabel == 'F';
+        } else if (aircraftType == 2 && row == 16) {
+            return seatLabel == 'A' || seatLabel == 'F';
         }
         return false;
     }
 
-    // Get fire exit rows based on aircraft type
-    private int[] getFireExitRows(int aircraftType) {
-        if (aircraftType == 1) {
-            return new int[]{10}; // Aircraft 1 fire exit rows
-        } else if (aircraftType == 2) {
-            return new int[]{16}; // Aircraft 2 fire exit rows
+    private boolean createsSingleScatteredSeats(List<String> seatsToBook, int row) {
+        // Check the seat before the first in the booking
+        if (seatsToBook.get(0).charAt(1) != 'A') {
+            char prevSeatLabel = (char) (seatsToBook.get(0).charAt(1) - 1);
+            String prevSeat = row + "" + prevSeatLabel;
+            if (!reservedSeats.contains(prevSeat) && !seatsToBook.contains(prevSeat)) {
+                return true;
+            }
         }
-        return new int[]{}; // No fire exit rows if type not recognized
+
+        // Check the seat after the last in the booking
+        if (seatsToBook.get(seatsToBook.size() - 1).charAt(1) != 'F') {
+            char nextSeatLabel = (char) (seatsToBook.get(seatsToBook.size() - 1).charAt(1) + 1);
+            String nextSeat = row + "" + nextSeatLabel;
+            if (!reservedSeats.contains(nextSeat) && !seatsToBook.contains(nextSeat)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
